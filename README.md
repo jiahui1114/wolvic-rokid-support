@@ -1,5 +1,8 @@
 # Wolvic XR Browser
 
+* This fork project enables wolvic to run on rokid devices such as station2 and stationPro.
+--------------------------------------------------------------------------------------------
+
 The goal of the Wolvic project is to create a full-featured browser exclusively AR and VR headsets.
 
 You can find us in [wolvic.com](https://www.wolvic.com), Mastodon [@WolvicXR](https://floss.social/@WolvicXR), Twitter [@wolvicxr](https://twitter.com/wolvicxr), and at [info@wolvic.com](mailto:info@wolvic.com).

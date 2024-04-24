@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- (必须) 查询Runtime -->
+    <queries>
+        <package android:name="com.rokid.openxr.runtime" />
+    </queries>
+
+    <!-- (可选) 权限相关 -->
+    <uses-feature android:name="android.hardware.sensor.accelerometer" android:required="true"/>
+    <uses-feature android:name="android.hardware.sensor.gyroscope" android:required="true"/>
+    <uses-feature android:name="android.hardware.usb.host"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
+
+    <application android:requestLegacyExternalStorage="true">
+        <activity android:name=".VRBrowserActivity">
+            <meta-data android:name="android.app.lib_name" android:value="native-lib" />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+
+        <meta-data android:name="com.rokid.sdk" android:value="uxr"/>
+        <meta-data android:name="com.rokid.uxr.application.mode" android:value="3d" />
+        <meta-data android:name="android.allow_multiple_resumed_activities" android:value="true"/>
+
+        <uses-library android:name="com.rokid.sdk.st2.gesture"
+            android:required="false" />
+    </application>
+
+
+</manifest>

@@ -344,6 +344,17 @@ android {
             buildConfigField "Float", "DEFAULT_WINDOW_DISTANCE", "0.5f"
         }
 
+        rokidxr {
+            dimension "platform"
+            externalNativeBuild {
+                cmake {
+                    cppFlags " -DROKIDXR -DOPENXR -I" + file("src/openxr/cpp").absolutePath
+                    arguments "-DVR_SDK_LIB=rokidxr-lib", "-DROKIDXR=ON", "-DOPENXR=ON"
+                }
+            }
+        }
+
+
         // Supported ABIs
         arm64 {
             dimension "abi"

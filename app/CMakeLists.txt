@@ -123,6 +123,15 @@ if(OPENXR)
             ${CMAKE_SOURCE_DIR}/../third_party/picoxr/libs/android.${ANDROID_ABI}/libopenxr_loader.so
             ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libopenxr_loader.so
         )
+    elseif(ROKIDXR)
+        include_directories(
+                ${CMAKE_SOURCE_DIR}/../third_party/rokidxr/include
+        )
+        add_custom_command(TARGET native-lib POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy
+                ${CMAKE_SOURCE_DIR}/../third_party/rokidxr/libs/android.${ANDROID_ABI}/libopenxr_loader.so
+                ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}/libopenxr_loader.so
+                )
     endif ()
     target_sources(
             native-lib
@@ -205,6 +214,10 @@ set_target_properties(hvr-lib PROPERTIES IMPORTED_LOCATION
 add_library(picoxr-lib SHARED IMPORTED)
 set_target_properties(picoxr-lib PROPERTIES IMPORTED_LOCATION
         ${CMAKE_SOURCE_DIR}/../third_party/picoxr/libs/android.${ANDROID_ABI}/libopenxr_loader.so)
+
+add_library(rokidxr-lib SHARED IMPORTED)
+set_target_properties(rokidxr-lib PROPERTIES IMPORTED_LOCATION
+        ${CMAKE_SOURCE_DIR}/../third_party/rokidxr/libs/android.${ANDROID_ABI}/libopenxr_loader.so)
 
 if (LYNX OR SPACES)
     find_package(loader REQUIRED CONFIG)
