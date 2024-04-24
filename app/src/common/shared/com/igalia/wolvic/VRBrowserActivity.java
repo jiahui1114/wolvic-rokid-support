@@ -113,7 +113,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class VRBrowserActivity extends PlatformActivity implements WidgetManagerDelegate,
-        ComponentCallbacks2, LifecycleOwner, ViewModelStoreOwner, SharedPreferences.OnSharedPreferenceChangeListener {
+        ComponentCallbacks2, LifecycleOwner, ViewModelStoreOwner, SharedPreferences.OnSharedPreferenceChangeListener, PlatformActivityPlugin.PlatformActivityPluginListener {
 
     public static final String CUSTOM_URI_SCHEME = "wolvic";
     public static final String CUSTOM_URI_HOST = "com.igalia.wolvic";
@@ -246,6 +246,7 @@ public class VRBrowserActivity extends PlatformActivity implements WidgetManager
     private long mLastBatteryUpdate = System.nanoTime();
     private int mLastBatteryLevel = -1;
     private PlatformActivityPlugin mPlatformPlugin;
+    private int mLastMotionEventWidgetHandle;
 
     private boolean callOnAudioManager(Consumer<AudioManager> fn) {
         if (mAudioManager == null) {
@@ -461,6 +462,8 @@ public class VRBrowserActivity extends PlatformActivity implements WidgetManager
 
         // Create the platform plugin after widgets are created to be extra safe.
         mPlatformPlugin = createPlatformPlugin(this);
+        if (mPlatformPlugin != null)
+            mPlatformPlugin.registerListener(this);
 
         mWindows.restoreSessions();
     }
@@ -683,6 +686,8 @@ public class VRBrowserActivity extends PlatformActivity implements WidgetManager
         // Unregister the crash service broadcast receiver
         unregisterReceiver(mCrashReceiver);
         mSearchEngineWrapper.unregisterForUpdates();
+        if (mPlatformPlugin != null)
+            mPlatformPlugin.unregisterListener(this);
 
         mFragmentController.dispatchDestroy();
 
@@ -760,7 +765,10 @@ public class VRBrowserActivity extends PlatformActivity implements WidgetManager
             if (key.equals(getString(R.string.settings_key_voice_search_service))) {
                 initializeSpeechRecognizer();
             } else if (key.equals(getString(R.string.settings_key_head_lock))) {
-                setHeadLockEnabled(SettingsStore.getInstance(this).isHeadLockEnabled());
+                boolean isHeadLockEnabled = SettingsStore.getInstance(this).isHeadLockEnabled();
+                setHeadLockEnabled(isHeadLockEnabled);
+                if (!isHeadLockEnabled)
+                    recenterUIYaw(WidgetManagerDelegate.YAW_TARGET_ALL);
             }
     }
 
@@ -1129,9 +1137,11 @@ public class VRBrowserActivity extends PlatformActivity implements WidgetManager
     void handleMotionEvent(final int aHandle, final int aDevice, final boolean aFocused, final boolean aPressed, final float aX, final float aY) {
         runOnUiThread(() -> {
             Widget widget = mWidgets.get(aHandle);
+
             if (!isWidgetInputEnabled(widget)) {
                 widget = null; // Fallback to mRootWidget in order to allow world clicks to dismiss UI.
             }
+            mLastMotionEventWidgetHandle = widget != null ? widget.getHandle() : 0;
 
             float scale = widget != null ? widget.getPlacement().textureScale : SettingsStore.getInstance(this).getDisplayDpi() / 100.0f;
             // We shouldn't divide the scale factor when we pass the motion event to the web engine
@@ -2003,12 +2013,7 @@ public class VRBrowserActivity extends PlatformActivity implements WidgetManager
 
     @Override
     public void setHeadLockEnabled(boolean isHeadLockEnabled) {
-        queueRunnable(() -> {
-            setHeadLockEnabledNative(isHeadLockEnabled);
-            if (!isHeadLockEnabled) {
-                recenterUIYaw(WidgetManagerDelegate.YAW_TARGET_ALL);
-            }
-        });
+        queueRunnable(() -> setHeadLockEnabledNative(isHeadLockEnabled));
     }
 
     @Override
@@ -2137,6 +2142,12 @@ public class VRBrowserActivity extends PlatformActivity implements WidgetManager
 
     @Override
     public KeyboardWidget getKeyboard() { return mKeyboard; }
+
+    @Override
+    public void onPlatformScrollEvent(float distanceX, float distanceY) {
+        float SCROLL_SCALE = 32;
+        handleScrollEvent(mLastMotionEventWidgetHandle, 0, distanceX / SCROLL_SCALE, distanceY / SCROLL_SCALE);
+    }
 
     private native void addWidgetNative(int aHandle, WidgetPlacement aPlacement);
     private native void updateWidgetNative(int aHandle, WidgetPlacement aPlacement);
